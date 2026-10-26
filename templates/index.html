@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Model Viewer</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 720px; margin: 60px auto; color: #222; }
+    h1 { font-size: 1.6rem; }
+    .sub { color: #666; margin-bottom: 30px; }
+    .dropzone {
+      border: 2px dashed #999; border-radius: 10px; padding: 40px;
+      text-align: center; cursor: pointer; transition: border-color .15s;
+    }
+    .dropzone.drag { border-color: #4a7dfc; background: #f2f6ff; }
+    .dropzone input { display: none; }
+    .formats { margin-top: 10px; font-size: .85rem; color: #777; }
+    .flash { background: #fff3cd; border: 1px solid #ffe08a; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; }
+    button { margin-top: 20px; padding: 10px 22px; font-size: 1rem; border: none; border-radius: 6px; background: #4a7dfc; color: #fff; cursor: pointer; }
+    button:hover { background: #3a6ae8; }
+    #filename { margin-top: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>🧠 AI Model Viewer</h1>
+  <p class="sub">Model file (.pt / .onnx / .h5 / .keras / .safetensors) ကို upload လုပ်ပြီး architecture diagram ကို Mermaid (simplified) နဲ့ Netron (detailed) နှစ်မျိုးလုံးနဲ့ ကြည့်ရှုနိုင်ပါတယ်။</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+    <label class="dropzone" id="dropzone">
+      <div>📁 ဒီနေရာကို file ကို drag လုပ်ချပါ၊ (သို့) နှိပ်ပြီး ရွေးပါ</div>
+      <div class="formats">Supported: {{ extensions | join(', ') }}</div>
+      <div id="filename"></div>
+      <input type="file" name="model_file" id="fileInput" accept="{{ extensions | join(',') }}">
+    </label>
+    <button type="submit">Analyze Model</button>
+  </form>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const filenameLabel = document.getElementById('filename');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) filenameLabel.textContent = 'Selected: ' + fileInput.files[0].name;
+    });
+
+    ['dragenter', 'dragover'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+    );
+    ['dragleave', 'drop'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+    );
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        filenameLabel.textContent = 'Selected: ' + e.dataTransfer.files[0].name;
+      }
+    });
+  </script>
+</body>
+</html>
