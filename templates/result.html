@@ -12,9 +12,13 @@
     .badge { display: inline-block; background: #4a7dfc; color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: 600; margin: 10px 0; }
     .components { color: #555; font-size: .9rem; margin-bottom: 20px; }
     .components span { background: #eef2ff; border-radius: 12px; padding: 3px 10px; margin-right: 6px; display: inline-block; margin-bottom: 4px; }
-    .tabs { display: flex; gap: 8px; border-bottom: 2px solid #eee; margin-bottom: 16px; }
+    .tabs { display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #eee; margin-bottom: 16px; }
     .tab { padding: 10px 18px; cursor: pointer; border-radius: 8px 8px 0 0; color: #666; font-weight: 600; }
     .tab.active { background: #4a7dfc; color: #fff; }
+    .save-png-btn { margin-left: auto; padding: 8px 16px; font-size: .9rem; border: none; border-radius: 6px; background: #2ecc71; color: #fff; cursor: pointer; font-weight: 600; }
+    .save-png-btn:hover { background: #27ae60; }
+    .save-png-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .netron-export-hint { font-size: .85rem; color: #666; margin-top: 8px; }
     .panel { display: none; }
     .panel.active { display: block; }
     #mermaidBox { overflow: auto; border: 1px solid #eee; border-radius: 8px; padding: 20px; background: #fafbff; }
@@ -44,6 +48,7 @@
   <div class="tabs">
     <div class="tab active" data-target="simplified">🧩 Simplified (Mermaid)</div>
     <div class="tab" data-target="detailed">🔬 Detailed (Netron)</div>
+    <button id="savePngBtn" class="save-png-btn" title="Simplified diagram ကို PNG အဖြစ် save လုပ်ပါ">💾 Save as PNG</button>
   </div>
 
   <div class="panel active" id="simplified">
@@ -55,6 +60,7 @@
   <div class="panel" id="detailed">
     {% if netron_url %}
       <iframe src="{{ netron_url }}"></iframe>
+      <p class="netron-export-hint">ℹ️ Detailed (Netron) view ကို PNG အဖြစ် save ချင်ရင် ရနိုင်ပါတယ် — အပေါ်က iframe ထဲ ညာဘက်ထောင့်က <b>≡ (menu) ခလုတ်</b> ကို နှိပ်ပြီး <b>File → Export as PNG</b> ကို ရွေးပါ (shortcut: <code>Ctrl+Shift+E</code>)။ ဒါက Netron ကိုယ်ပိုင် built-in export ဖြစ်လို့ browser cross-origin ကန့်သတ်ချက်ကို ကျော်ပြီး အလုပ်လုပ်ပါတယ်။</p>
     {% else %}
       <div class="netron-missing">Detailed Netron view ကို ဒီ model format အတွက် စတင်လို့ မရသေးပါ။ Simplified Mermaid view ကိုသာ ကြည့်ရှုနိုင်ပါသေးတယ်။</div>
     {% endif %}
@@ -79,7 +85,22 @@
   </details>
 
   <script>
-    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
+    // htmlLabels: false renders node text as native SVG <text>/<tspan> instead
+    // of <foreignObject> HTML, which keeps the diagram exportable to PNG
+    // (foreignObject content taints a canvas and blocks PNG export).
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { htmlLabels: false } });
+
+    const savePngBtn = document.getElementById('savePngBtn');
+    const sourceFilename = {{ filename | tojson }};
+    const safeBaseName = sourceFilename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_') || 'model';
+
+    function updateSaveButtonState(activeTarget) {
+      const isSimplified = activeTarget === 'simplified';
+      savePngBtn.disabled = !isSimplified;
+      savePngBtn.title = isSimplified
+        ? 'Simplified diagram ကို PNG အဖြစ် save လုပ်ပါ'
+        : 'Detailed (Netron) view ကို save လုပ်ချင်ရင် အောက်က iframe ထဲက ≡ menu → File → Export as PNG ကို သုံးပါ (Ctrl+Shift+E)';
+    }
 
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -87,8 +108,80 @@
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById(tab.dataset.target).classList.add('active');
+        updateSaveButtonState(tab.dataset.target);
       });
     });
+
+    updateSaveButtonState('simplified');
+
+    function downloadMermaidAsPng() {
+      const svg = document.querySelector('#mermaidBox svg');
+      if (!svg) {
+        alert('Diagram ကို ရှာမတွေ့ပါ။ ခဏနေမှ ပြန်ကြိုးစားကြည့်ပါ။');
+        return;
+      }
+
+      const rect = svg.getBoundingClientRect();
+      const scale = 3; // render at higher resolution for a crisp PNG
+      const width = Math.ceil(rect.width || svg.viewBox.baseVal.width || 800);
+      const height = Math.ceil(rect.height || svg.viewBox.baseVal.height || 600);
+
+      const clonedSvg = svg.cloneNode(true);
+      clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clonedSvg.setAttribute('width', width);
+      clonedSvg.setAttribute('height', height);
+      const source = new XMLSerializer().serializeToString(clonedSvg);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      savePngBtn.disabled = true;
+      const originalLabel = savePngBtn.textContent;
+      savePngBtn.textContent = '⏳ Saving...';
+
+      const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+
+      const finish = () => {
+        savePngBtn.disabled = false;
+        savePngBtn.textContent = originalLabel;
+      };
+
+      img.onload = () => {
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(blob => {
+          if (!blob) {
+            alert('PNG အဖြစ် save လုပ်ရာမှာ အမှားတက်ပါတယ်။');
+            finish();
+            return;
+          }
+          const link = document.createElement('a');
+          link.download = safeBaseName + '-architecture.png';
+          link.href = URL.createObjectURL(blob);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          finish();
+        });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        alert('PNG အဖြစ် save လုပ်ရာမှာ အမှားတက်ပါတယ်။');
+        finish();
+      };
+      img.src = url;
+    }
+
+    savePngBtn.addEventListener('click', downloadMermaidAsPng);
   </script>
 </body>
 </html>

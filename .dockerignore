@@ -1,0 +1,8 @@
+venv/
+.git/
+__pycache__/
+*.pyc
+docker/
+test_fixtures/
+static/uploads/*
+!static/uploads/.gitkeep

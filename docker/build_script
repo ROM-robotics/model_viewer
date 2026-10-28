@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Build with name romrobotics/model_viewer:latest
+set -euo pipefail
+
+IMAGE_NAME="romrobotics/model_viewer:latest"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+docker build -f "$REPO_ROOT/docker/Dockerfile" -t "$IMAGE_NAME" "$REPO_ROOT"
+
+cat <<MSG
+
+Built $IMAGE_NAME
+
+Run it with (host networking is required so the embedded Netron viewer's
+random localhost port stays reachable):
+
+  docker run --rm -it --network host $IMAGE_NAME
+
+Then open http://127.0.0.1:5000 (the terminal will also print this address
+once Flask starts).
+MSG
