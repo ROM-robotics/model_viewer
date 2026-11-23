@@ -1,4 +1,4 @@
-# AI Model Viewer
+# $\color{#00c853}{\text{AI Model Viewer}}$
 
 Upload an AI model file (`.pt` / `.pth` / `.onnx` / `.h5` / `.keras` / `.safetensors`)
 and see its architecture two ways:
@@ -11,7 +11,7 @@ and see its architecture two ways:
   [Netron](https://github.com/lutzroeder/netron) open-source viewer,
   embedded in an iframe.
 
-## Setup
+## $\color{red}{\text{Setup}}$
 
 ```bash
 python3 -m venv venv
@@ -21,16 +21,20 @@ pip install -r requirements.txt
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
 
-## Run
+## $\color{red}{\text{Run}}$
 
 ```bash
+# source virtual environment
 source venv/bin/activate
+```
+```bash
+# GUI
 python app.py
 ```
 
 Then open **http://127.0.0.1:5000** in a browser and upload a model file.
 
-## Try it with sample models
+## $\color{red}{\text{Try it with sample models}}$
 
 `generate_test_models.py` creates one example file per supported format
 (a small CNN+GRU hybrid, a plain CNN exported to ONNX, a fake Keras LSTM
@@ -38,11 +42,15 @@ config, and a synthetic Transformer-ish safetensors file) under
 `test_fixtures/`, useful for quickly trying out the viewer:
 
 ```bash
+# source virtual environment
 source venv/bin/activate
+```
+```bash
+# CLI: generate sample models
 python generate_test_models.py
 ```
 
-## How layer types are detected per format
+## $\color{red}{\text{How layer types are detected per format}}$
 
 | Format | Source of layer info |
 |---|---|
@@ -61,7 +69,7 @@ parse fine for the Simplified view (only the graph structure is read), but
 the Detailed Netron view may be incomplete if that sibling file wasn't
 uploaded alongside the model.
 
-## Project structure
+## $\color{red}{\text{Project structure}}$
 
 ```
 app.py                 Flask routes (upload, analyze, render)
@@ -76,4 +84,4 @@ parsers/
   mermaid_gen.py         Mermaid flowchart generator
 templates/              index.html (upload form), result.html (diagrams)
 ```
-# model_viewer
+# $\color{#00c853}{\text{model viewer}}$

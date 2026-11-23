@@ -3,7 +3,7 @@
   (Decision: "Save as PNG" က browser-side canvas download ပဲ ဖြစ်ပြီး container/host
   filesystem ကို မထိပါ — user ရဲ့ browser download folder ကို အလိုအလျောက် သွားပါတယ်။)
 
-## Build
+## $\color{red}{\text{Build}}$
 
 ```bash
 ./docker/build_script
@@ -12,7 +12,7 @@
 Builds the image as `romrobotics/model_viewer:latest`, based on Ubuntu 22.04
 with all Python deps installed system-wide (no venv inside the container).
 
-## Run
+## $\color{red}{\text{Run}}$
 
 ```bash
 docker run --rm -it --network host romrobotics/model_viewer:latest
