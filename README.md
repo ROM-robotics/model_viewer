@@ -14,22 +14,26 @@ and see its architecture two ways:
 ## $\color{red}{\text{Setup}}$
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-# torch's CPU wheel isn't on PyPI's default index:
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+cd ~/Desktop/cherry_thin
+# လိုအပ်မှ တစ်ကြိမ် setup လုပ်ပါ။
+python3 -m venv src/B_how_to_train_your_dragon/.venv_for_ppo
+source src/B_how_to_train_your_dragon/.venv_for_ppo/bin/activate
+export PYTHONPATH=""
+pip install -r src/B_how_to_train_your_dragon/requirements.txt
+deactivate
 ```
 
 ## $\color{red}{\text{Run}}$
 
+ဤ directory တွင် `clear_outputs_directory` script မရှိသဖြင့် ရှိပြီးသား files များကို မရှင်းပါ။
+
 ```bash
-# source virtual environment
-source venv/bin/activate
-```
-```bash
-# GUI
-python app.py
+cd ~/Desktop/cherry_thin
+# GUI: server ကို Ctrl+C ဖြင့် ရပ်ပြီးမှ deactivate လုပ်ပါ
+source src/B_how_to_train_your_dragon/.venv_for_ppo/bin/activate
+export PYTHONPATH=""
+python src/B_how_to_train_your_dragon/model_viewer/app.py
+deactivate
 ```
 
 Then open **http://127.0.0.1:5000** in a browser and upload a model file.
@@ -41,14 +45,18 @@ Then open **http://127.0.0.1:5000** in a browser and upload a model file.
 config, and a synthetic Transformer-ish safetensors file) under
 `test_fixtures/`, useful for quickly trying out the viewer:
 
+ရှိပြီးသား fixture files များ overwrite ဖြစ်နိုင်သဖြင့် run မလုပ်မီ backup လုပ်ပါ။
+
 ```bash
-# source virtual environment
-source venv/bin/activate
-```
-```bash
+cd ~/Desktop/cherry_thin
 # CLI: generate sample models
-python generate_test_models.py
+source src/B_how_to_train_your_dragon/.venv_for_ppo/bin/activate
+export PYTHONPATH=""
+python src/B_how_to_train_your_dragon/model_viewer/generate_test_models.py
+deactivate
 ```
+
+ဤ directory တွင် သီးခြား Python test suite မရှိပါ။
 
 ## $\color{red}{\text{How layer types are detected per format}}$
 
